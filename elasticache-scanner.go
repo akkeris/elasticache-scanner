@@ -13,12 +13,6 @@ import (
         _ "github.com/lib/pq"
 )
 
-type Instance struct {
-	Endpoint string
-	ID       string
-	Engine   string
-        AppSpace string
-}
 
 type Stat struct {
 	Key   string `json:"key"`
