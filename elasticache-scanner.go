@@ -199,7 +199,7 @@ func getAppSpaceList(engine string) (l map[string]string, e error) {
                 fmt.Println(dberr)
                 return nil, dberr
         }
-        stmt,dberr := db.Prepare("select appname, space, bindname  from appbindings where bindtype='"+engine+"';")
+        stmt,dberr := db.Prepare("select apps.name as appname, spaces.name as space, service_attachments.service as bindname from apps, spaces, services, service_attachments where services.service=service_attachments.service and owned=true and addon_name='"+engine+"' and services.deleted=false and service_attachments.deleted=false and service_attachments.app=apps.app and spaces.space=apps.space;")
         defer stmt.Close()
         rows, err := stmt.Query()
         if dberr != nil {
