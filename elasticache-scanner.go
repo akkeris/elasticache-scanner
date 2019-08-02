@@ -55,6 +55,7 @@ func getRedisStats(bind string, app string) {
         }
         var name string
         var endpoint string
+fmt.Println("querying for "+bind)
         dberr = db.QueryRow("select name, endpoint from resources where id = '"+bind+"'").Scan(&name, &endpoint)
 
         if dberr != nil {
@@ -199,7 +200,24 @@ func getAppSpaceList(engine string) (l map[string]string, e error) {
                 fmt.Println(dberr)
                 return nil, dberr
         }
-        stmt,dberr := db.Prepare("select apps.name as appname, spaces.name as space, service_attachments.service as bindname from apps, spaces, services, service_attachments where services.service=service_attachments.service and owned=true and addon_name='"+engine+"' and services.deleted=false and service_attachments.deleted=false and service_attachments.app=apps.app and spaces.space=apps.space;")
+        stmt,dberr := db.Prepare(fmt.Sprintf(`
+select apps.name as appname, 
+       spaces.name as space, 
+       service_attachments.service as bindname
+  from apps, spaces, services, service_attachments, stacks
+  where spaces.stack=stacks.stack
+    and services.service=service_attachments.service 
+    and owned=true 
+    and addon_name='%s' 
+    and service_attachments.deleted = false
+    and apps.deleted = false
+    and spaces.deleted = false
+    and services.deleted=false 
+    and service_attachments.deleted=false 
+    and service_attachments.app=apps.app 
+    and stacks.name='%s'
+    and spaces.space=apps.space;
+`, engine, os.Getenv("STACK")))
         defer stmt.Close()
         rows, err := stmt.Query()
         if dberr != nil {
